@@ -17,10 +17,6 @@ In many academic environments, knowledge is fragmented. Students often rely on u
 
 We utilize a Serverless Retrieval-Augmented Generation (RAG) architecture optimized for cost efficiency and scalability.
 
-For a detailed breakdown of the engineering decisions, please refer to our documentation:
-* [System Design](docs/design.md) - Architecture and data flow.
-* [Requirements & Specs](docs/requirements.md) - Functional specifications.
-
 ## Tech Stack
 
 We selected this stack to maximize performance.
