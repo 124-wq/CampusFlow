@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+mangum
 boto3
 python-multipart
 python-dotenv

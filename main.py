@@ -19,7 +19,7 @@ app = FastAPI()
 # Add your Amplify URL here once Step 2 of the deployment is done
 origins = [
     "http://localhost:5173",
-    "https://main.xxxxxx.amplifyapp.com", # <--- Replace with your Amplify URL
+    "https://gdced15ku9.execute-api.us-east-1.amazonaws.com/default/CampusFlow_Backend", # <--- Replace with your Amplify URL
 ]
 
 app.add_middleware(
@@ -238,3 +238,6 @@ async def smart_search(query: str, branch: str = None):
 
     except Exception as e:
         return {"error": str(e)}
+
+from mangum import Mangum
+handler = Mangum(app)
