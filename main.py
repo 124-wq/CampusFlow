@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import google.generativeai as genai
 from boto3.dynamodb.conditions import Key # Required for message queries
-
+from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 # --- Google Gemini/Gemma Configuration ---
@@ -16,19 +16,17 @@ model = genai.GenerativeModel('models/gemma-3-1b-it')
 
 app = FastAPI()
 
-# Add your Amplify URL here once Step 2 of the deployment is done
-origins = [
-    "http://localhost:5173",
-    "https://gdced15ku9.execute-api.us-east-1.amazonaws.com/default/CampusFlow_Backend", # <--- Replace with your Amplify URL
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add your Amplify URL here once Step 2 of the deployment is done
+origins = ["*"]
+
 
 # --- AWS Configuration ---
 REGION = "us-east-1"
@@ -239,5 +237,7 @@ async def smart_search(query: str, branch: str = None):
     except Exception as e:
         return {"error": str(e)}
 
-from mangum import Mangum
-handler = Mangum(app)
+
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")

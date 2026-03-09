@@ -1,7 +1,7 @@
 fastapi
-mangum
 boto3
 python-multipart
 python-dotenv
 google-generativeai
 pymupdf
+uvicorn

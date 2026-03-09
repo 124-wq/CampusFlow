@@ -6,7 +6,7 @@ import {
   MessageSquare, Search, FileText, Award, ChevronLeft, Send, Globe, MoreVertical, Paperclip, Smile, X, HardDrive, Star, Sparkles, Heart, CloudUpload, Cpu
 } from 'lucide-react';
 import axios from 'axios';
-
+const API_BASE = "http://54.227.118.150:8000";
 const disciplines = [
   { id: 1, name: 'B.Tech / B.E', branches: ['CSE', 'IT', 'ECE', 'ME', 'Civil'], color: 'from-purple-300 to-indigo-300' },
   { id: 2, name: 'BCA / MCA', branches: ['Full Stack', 'Cloud', 'Cyber', 'Data Science'], color: 'from-pink-300 to-rose-300' },
@@ -52,7 +52,7 @@ const disciplines = [
 
   const refreshHubsList = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/list-branch-groups/${encodeURIComponent(selectedBranch)}`);
+      const res = await fetch(`${API_BASE}/list-branch-groups/${encodeURIComponent(selectedBranch)}`);
       const data = await res.json();
       setAvailableHubs(data.groups || []);
     } catch (e) { console.error("Sync error"); }
@@ -61,10 +61,10 @@ const disciplines = [
   useEffect(() => {
     const init = async () => {
       try {
-        const p = await fetch(`http://127.0.0.1:8000/user-profile/${encodeURIComponent(userEmail)}`);
+        const p = await fetch(`${API_BASE}/user-profile/${encodeURIComponent(userEmail)}`);
         const data = await p.json();
         setKarma(data.karma || 0);
-        const l = await fetch("http://127.0.0.1:8000/leaderboard");
+        const l = await fetch(`${API_BASE}/leaderboard`);
         setLeaderboard(await l.json());
       } catch (e) { console.error("Init failed"); } finally { setIsLoading(false); }
     };
@@ -78,8 +78,8 @@ const disciplines = [
 
   const fetchFiles = async (deg, br) => {
     try {
-      const r = await fetch(`http://127.0.0.1:8000/list-files?degree=${encodeURIComponent(deg)}&branch=${encodeURIComponent(br)}`);
-      const d = await r.json(); 
+      const r = await fetch(`${API_BASE}/list-files?degree=${encodeURIComponent(deg)}&branch=${encodeURIComponent(br)}`);
+      const d = await r.json(); 
       setCloudFiles(Array.isArray(d.files) ? d.files : []);
     } catch (e) { setCloudFiles([]); }
   };
@@ -92,7 +92,7 @@ const disciplines = [
     try {
       setSearchProgress(40);
       // Calling the new Smart Search Backend Endpoint
-      const res = await fetch(`http://127.0.0.1:8000/smart-search?query=${encodeURIComponent(searchQuery)}&branch=${encodeURIComponent(selectedBranch)}`);
+      const res = await fetch(`${API_BASE}/smart-search?query=${encodeURIComponent(searchQuery)}&branch=${encodeURIComponent(selectedBranch)}`);
       setSearchProgress(80);
       const data = await res.json();
       // Update the file list with relevant search results
@@ -110,7 +110,7 @@ const disciplines = [
     if (!chatMessage.trim() || !file?.filename) return;
     setAiResponse("Bifurcating Neural Context... 🧠");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/ask-campus?question=${encodeURIComponent(chatMessage)}&filename=${encodeURIComponent(file.filename)}`);
+      const res = await fetch(`${API_BASE}/ask-campus?question=${encodeURIComponent(chatMessage)}&filename=${encodeURIComponent(file.filename)}`);
       const data = await res.json(); 
       setAiResponse(data.answer || data.error);
     } catch (err) { setAiResponse("System Fault 🌸"); }
@@ -124,17 +124,17 @@ const disciplines = [
     try {
       setUiStatus("☁️ Ingressing to S3...");
       const res = await axios.post(
-        `http://127.0.0.1:8000/upload?email=${encodeURIComponent(userEmail)}&degree=${selectedDegree}&branch=${selectedBranch}`,
+        `${API_BASE}/upload?email=${encodeURIComponent(userEmail)}&degree=${selectedDegree}&branch=${selectedBranch}`,
         formData,
         { onUploadProgress: (p) => setUploadProgress(Math.round((p.loaded * 100) / p.total)) }
       );
       if (res.data.new_karma) {
     // --- SYNC FIX: Re-fetch profile and leaderboard to update UI ---
-    const profileRes = await fetch(`http://127.0.0.1:8000/user-profile/${encodeURIComponent(userEmail)}`);
+    const profileRes = await fetch(`${API_BASE}/user-profile/${encodeURIComponent(userEmail)}`);
     const updatedData = await profileRes.json();
     setKarma(updatedData.karma); 
 
-    const leadRes = await fetch("http://127.0.0.1:8000/leaderboard");
+    const leadRes = await fetch(`${API_BASE}/leaderboard`);
     setLeaderboard(await leadRes.json());
     
     setUiStatus("✨ +50 XP Synced!");
@@ -146,7 +146,7 @@ const disciplines = [
   const handleCreateHub = async () => {
     if (!hubName || !hubPass) return setUiStatus("🎀 Incomplete credentials!");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/create-group?name=${encodeURIComponent(hubName)}&branch=${encodeURIComponent(selectedBranch)}&password=${encodeURIComponent(hubPass)}&creator=${encodeURIComponent(userEmail)}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/create-group?name=${encodeURIComponent(hubName)}&branch=${encodeURIComponent(selectedBranch)}&password=${encodeURIComponent(hubPass)}&creator=${encodeURIComponent(userEmail)}`, { method: 'POST' });
       const data = await res.json();
       if (data.invite_link) { setInviteLink(data.invite_link); setUiStatus("Establishment OK!"); refreshHubsList(); }
     } catch (e) { setUiStatus("❌ Error."); }
@@ -154,7 +154,7 @@ const disciplines = [
 
 const handleUnlockHub = async (hub) => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/verify-group-access?invite_code=${hub.invite_code}&password=${groupPasswordInput}`, { method: 'POST' });
+    const res = await fetch(`${API_BASE}/verify-group-access?invite_code=${hub.invite_code}&password=${groupPasswordInput}`, { method: 'POST' });
     const data = await res.json();
     
     if (data.authorized) {
@@ -162,7 +162,7 @@ const handleUnlockHub = async (hub) => {
       setActiveJoinedHub(hub);
       
       // NEW: Fetch persistent history from the database
-      const msgRes = await fetch(`http://127.0.0.1:8000/get-messages/${hub.invite_code}`);
+      const msgRes = await fetch(`${API_BASE}/get-messages/${hub.invite_code}`);
       const history = await msgRes.json();
       setCommunityPosts(history); 
       
@@ -173,13 +173,21 @@ const handleUnlockHub = async (hub) => {
   const handleFileShare = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-        setCommunityPosts([...communityPosts, { sender: userEmail, text: `📄 Shared: ${selectedFile.name}`, branch: activeJoinedHub.invite_code, isMedia: true }]);
+        setCommunityPosts([...communityPosts, {
+ sender: userEmail,
+ text: `📄 Shared: ${selectedFile.name}`,
+ invite_code: activeJoinedHub.invite_code,
+ isMedia: true
+}]);
     }
   };
 
   const transmitMessage = async () => {
-  if (!chatMessage.trim()) return;
-  
+  <button onClick={transmitMessage}
+className="bg-purple-400 p-8 rounded-full text-white hover:bg-purple-500 transition-all shadow-2xl shadow-purple-100 active:scale-90">
+<Send size={32}/>
+</button>
+
   const newPost = { 
     invite_code: activeJoinedHub.invite_code, 
     sender: userEmail, 
@@ -188,7 +196,7 @@ const handleUnlockHub = async (hub) => {
 
   try {
     // Save to database so others can see it
-    await axios.post(`http://127.0.0.1:8000/send-message?invite_code=${newPost.invite_code}&sender=${newPost.sender}&text=${encodeURIComponent(newPost.text)}`);
+    await axios.post(`${API_BASE}/send-message?invite_code=${newPost.invite_code}&sender=${newPost.sender}&text=${encodeURIComponent(newPost.text)}`);
     
     // Update local UI immediately
     setCommunityPosts([...communityPosts, newPost]);
@@ -291,7 +299,7 @@ const handleUnlockHub = async (hub) => {
                         <div className="space-y-4">
                            <button onClick={() => { setFile(f); setActiveTab('ai'); setAiResponse(""); }} className="w-full py-5 bg-purple-400 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 shadow-md shadow-purple-100">AI Ingress ✨</button>
                            {/* DOWNLOAD FIX - Direct Backend Link */}
-                           <button onClick={() => window.open(`http://127.0.0.1:8000/download/${f.filename}`)} className="w-full py-4 bg-pink-50 text-pink-400 rounded-full text-[10px] font-black uppercase border border-pink-100 hover:bg-pink-100 transition-all shadow-sm">Download Packet</button>
+                           <button onClick={() => window.open(`${API_BASE}/download/${f.filename}`)} className="w-full py-4 bg-pink-50 text-pink-400 rounded-full text-[10px] font-black uppercase border border-pink-100 hover:bg-pink-100 transition-all shadow-sm">Download Packet</button>
                         </div>
                       </div>
                     ))}
@@ -414,7 +422,7 @@ const handleUnlockHub = async (hub) => {
                           </div>
                         ) : (
                           <div className="space-y-12 animate-in slide-in-from-bottom-8">
-                            {communityPosts.filter(p => p.branch === activeJoinedHub.invite_code).map((post, idx) => (
+                            {communityPosts.filter(p => p.invite_code === activeJoinedHub.invite_code).map((post, idx) => (
                               <div key={idx} className={`flex ${post.sender === userEmail ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[70%] px-12 py-8 rounded-[4rem] relative shadow-2xl ${post.sender === userEmail ? 'bg-purple-500 text-white rounded-tr-none shadow-purple-100 border border-purple-400' : 'bg-white text-slate-500 rounded-tl-none border-4 border-purple-50'}`}>
                                   <p className={`text-[9px] font-black mb-4 uppercase tracking-[0.4em] ${post.sender === userEmail ? 'text-purple-100' : 'text-purple-300'}`}>{post.sender === userEmail ? "LOCAL HOST ✨" : post.sender.split('@')[0]}</p>
@@ -441,8 +449,23 @@ const handleUnlockHub = async (hub) => {
                                ))}
                             </div>
                           )}
-                          <input autoComplete="off" value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} placeholder="Transmit Data Packet... 🍭" className="flex-1 bg-purple-50 border-none rounded-full px-12 py-8 outline-none text-sm font-black text-indigo-600 italic shadow-inner placeholder:text-purple-200 tracking-tighter" onKeyPress={(e) => e.key === 'Enter' && chatMessage.trim() && (setCommunityPosts([...communityPosts, {sender: userEmail, text: chatMessage, branch: activeJoinedHub.invite_code}]), setChatMessage(""))} />
-                          <button onClick={() => { if(!chatMessage.trim()) return; setCommunityPosts([...communityPosts, {sender: userEmail, text: chatMessage, branch: activeJoinedHub.invite_code}]); setChatMessage(""); }} className="bg-purple-400 p-8 rounded-full text-white hover:bg-purple-500 transition-all shadow-2xl shadow-purple-100 active:scale-90"><Send size={32}/></button>
+                          <input
+  autoComplete="off"
+  value={chatMessage}
+  onChange={(e) => setChatMessage(e.target.value)}
+  placeholder="Transmit Data Packet... 🍭"
+  className="flex-1 bg-purple-50 border-none rounded-full px-12 py-8 outline-none text-sm font-black text-indigo-600 italic shadow-inner placeholder:text-purple-200 tracking-tighter"
+  onKeyDown={(e) => {
+    if (e.key === "Enter") transmitMessage();
+  }}
+/>
+
+<button
+  onClick={transmitMessage}
+  className="bg-purple-400 p-8 rounded-full text-white hover:bg-purple-500 transition-all shadow-2xl shadow-purple-100 active:scale-90"
+>
+  <Send size={32}/>
+</button>
                         </div>
                       )}
                     </div>
